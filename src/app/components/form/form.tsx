@@ -3,7 +3,6 @@ import { login, register } from "@/lib/auth";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import cookieService from "@/app/api/cookie";
 import { FirebaseError } from "firebase/app";
 import {
   Alert,
@@ -59,13 +58,18 @@ export const Form = (props: Props) => {
     $event.preventDefault();
     setLoading(true);
     try {
-      const userCredentials = login(email, password);
-      const user = (await userCredentials).user;
+      const userCredentials = await login(email, password);
+      const user = userCredentials.user;
       const token = await user.getIdToken();
-      cookieService.setAccessToken("authToken", token, {
-        maxAge: 3600,
-        path: "/",
-      });
+
+      await fetch("/api/auth/set-cookie", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      }).then((res) => res.json());
+  
       localStorage.setItem("user", JSON.stringify(user));
       router.push("/dashboard");
       setLoading(false);
@@ -80,7 +84,7 @@ export const Form = (props: Props) => {
     $event.preventDefault();
     setLoading(true);
     try {
-      if (password !== confirmPassword) {
+      if (props.typeSubmit === "register" && password !== confirmPassword) {
         setError("differentPassword");
         return;
       } else {
@@ -88,11 +92,6 @@ export const Form = (props: Props) => {
       }
       const userCredentials = register(email, password);
       const user = (await userCredentials).user;
-      const token = await user.getIdToken();
-      cookieService.setAccessToken("authToken", token, {
-        maxAge: 3600,
-        path: "/",
-      });
       localStorage.setItem("user", JSON.stringify(user));
       router.push("/dashboard");
     } catch (err) {
