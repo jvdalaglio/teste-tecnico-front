@@ -15,6 +15,9 @@ export default {
         'ft-platinum': '#E5E5E5',
         'ft-gray': '#CBC5EA'
       },
+      screens: {
+        'xs': '425px',
+      }
     },
   },
   plugins: [],
