@@ -11,6 +11,10 @@ import {
   SnackbarCloseReason,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import {
+  getAccessTokenFromCookie,
+  setAccessTokenInCookie
+} from "@/app/api/cookieService";
 
 type Props = {
   typeSubmit: string;
@@ -27,22 +31,21 @@ export const Form = (props: Props) => {
   const [haveToken, setHaveToken] = useState<boolean | null>(null);
 
   useEffect(() => {
-    async function fetchToken() {
-      const response = await fetch("/api/auth/get-cookie");
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          router.push("/dashboard");
+    async function checkToken() {
+      try {
+        const data = await getAccessTokenFromCookie();
+        if (data?.success) {
+          router.push("/home");
         }
-        setHaveToken(data.success);
-      } else {
+        setHaveToken(data?.success || false);
+      } catch (err) {
+        console.error("Error checking token:", err);
         setHaveToken(false);
       }
     }
 
-    fetchToken();
+    checkToken();
   }, [router]);
-
 
   if (haveToken === null) {
     return null;
@@ -58,25 +61,6 @@ export const Form = (props: Props) => {
     setOpen(false);
   };
 
-  const action = (
-    <IconButton
-      size="small"
-      aria-label="close"
-      color="inherit"
-      onClick={handleClose}
-    >
-      <CloseIcon fontSize="small" />
-    </IconButton>
-  );
-
-  const setTokenCookies = async (token: string) => {
-    await fetch("/api/auth/set-cookie", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-    }).then((res) => res.json());
-  };
-
   const loginSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
@@ -85,10 +69,10 @@ export const Form = (props: Props) => {
       const user = userCredentials.user;
 
       const token = await user.getIdToken();
-      await setTokenCookies(token);
+      await setAccessTokenInCookie(token);
       setHaveToken(true);
       localStorage.setItem("user", JSON.stringify(user));
-      router.push("/dashboard");
+      router.push("/home");
       setError(null);
     } catch (err) {
       setError("loginError");
@@ -111,10 +95,10 @@ export const Form = (props: Props) => {
       const user = userCredentials.user;
 
       const token = await user.getIdToken();
-      await setTokenCookies(token);
+      await setAccessTokenInCookie(token);
       setHaveToken(true);
       localStorage.setItem("user", JSON.stringify(user));
-      router.push("/dashboard");
+      router.push("/home");
       setError(null);
     } catch (err) {
       const firebaseError = err as FirebaseError;
@@ -129,84 +113,89 @@ export const Form = (props: Props) => {
     <div>
       {!haveToken ? (
         <div className="h-screen w-screen flex justify-center items-center bg-[url('/background.webp')] bg-cover">
-          <div className="xl:w-1/3 text-center flex flex-col gap-8 rounded-xl bg-ft-gray bg-opacity-50 items-center py-20">
-            <Image src="/logo.webp" width={100} height={100} alt="" />
-            <h1 className="text-[2rem] text-ft-secondary font-bold">
-              Bem-vindo ao Finan Track
-            </h1>
-            <form
-              className="bg-ft-primary p-8 rounded-xl"
-              onSubmit={
-                props.typeSubmit === "register" ? registerSubmit : loginSubmit
-              }
-              method="post"
-            >
-              <div className=" flex flex-col items-center gap-8">
-                <span>
-                  {props.typeSubmit === "register" ? "Registrar" : "Login"}
-                </span>
-                <input
-                  type="email"
-                  className="bg-ft-secondary text-ft-platinum py-2 px-4 rounded-lg"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <input
-                  type="password"
-                  className="bg-ft-secondary text-ft-platinum py-2 px-4 rounded-lg"
-                  placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                {props.typeSubmit === "register" && (
-                  <div>
-                    <input
-                      type="password"
-                      className="bg-ft-secondary text-ft-platinum py-2 px-4 rounded-lg"
-                      placeholder="Confirme sua senha"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      data-tooltip-target="tooltip-light"
-                      data-tooltip-style="light"
-                    />
-                    {error === "differentPassword" && (
-                      <p className="text-red-500 pt-3">
-                        ❗ As senhas não são iguais.
-                      </p>
-                    )}
+          <div className="h-full grid place-items-center md:w-[40%]">
+            <div className="grid place-items-center p-8 max-h-100 w-full bg-ft-gray bg-opacity-70 rounded text-ft-secondary text-lg font-bold">
+              <Image src="/logo.webp" width={100} height={100} alt="" />
+              <h1 className="text-[20px] text-ft-secondary font-bold">
+                Bem-vindo ao Finan Track
+              </h1>
+              <form
+                onSubmit={
+                  props.typeSubmit === "register" ? registerSubmit : loginSubmit
+                }
+                method="post"
+              >
+                <div className="grid place-items-center gap-2 sm:gap-4">
+                  <span>
+                    {props.typeSubmit === "register" ? "Registrar" : "Login"}
+                  </span>
+                  <input
+                    type="email"
+                    className="bg-ft-secondary text-ft-platinum py-2 px-4 rounded-lg"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                  <input
+                    type="password"
+                    className="bg-ft-secondary text-ft-platinum py-2 px-4 rounded-lg"
+                    placeholder="Senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  {props.typeSubmit === "register" && (
+                    <div>
+                      <input
+                        type="password"
+                        className="bg-ft-secondary text-ft-platinum py-2 px-4 rounded-lg"
+                        placeholder="Confirme sua senha"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                      />
+                      {error === "differentPassword" && (
+                        <p className="text-red-500 pt-3">
+                          ❗ As senhas não são iguais.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <div className="text-center">
+                    <button
+                      type="submit"
+                      className="bg-ft-platinum text-ft-tertiary py-2 rounded-lg w-full mb-4"
+                    >
+                      {props.typeSubmit === "register" ? "Registrar" : "Entrar"}
+                    </button>
+                    <p>
+                      {props.typeSubmit === "register"
+                        ? "Já possui uma conta?"
+                        : "Não possui uma conta?"}
+                    </p>
+                    <a
+                      href={
+                        props.typeSubmit === "register"
+                          ? "/auth/login"
+                          : "/auth/register"
+                      }
+                      className="underline underline-offset-4"
+                    >
+                      {props.typeSubmit === "register"
+                        ? "Faça login"
+                        : "Registre-se"}
+                    </a>
                   </div>
-                )}
-                <button
-                  type="submit"
-                  className="bg-ft-platinum text-ft-tertiary py-2 rounded-lg w-full"
-                >
-                  {props.typeSubmit === "register" ? "Registrar" : "Entrar"}
-                </button>
-                <div>
-                  <p>
-                    {props.typeSubmit === "register"
-                      ? "Já possui uma conta?"
-                      : "Não possui uma conta?"}
-                  </p>
-                  <a
-                    href={props.typeSubmit === "register" ? "/auth/login" : "/auth/register"}
-                    className="underline underline-offset-4"
-                  >
-                    {props.typeSubmit === "register" ? "Faça login" : "Registre-se"}
-                  </a>
                 </div>
-              </div>
-            </form>
-            {error === "loginError" && (
-              <p className="text-ft-platinum font-bold bg-red-700 bg-opacity-50 py-2 px-4 rounded-lg">
-                {error}
-              </p>
-            )}
+              </form>
+              {error === "loginError" && (
+                <p className="text-ft-platinum font-bold bg-red-700 bg-opacity-50 py-2 px-4 rounded-lg">
+                  {error}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       ) : (
-        <div>TESTE</div>
+        <div></div>
       )}
     </div>
   );
