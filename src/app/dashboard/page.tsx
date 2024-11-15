@@ -12,9 +12,8 @@ export default function Dashboard() {
       const response = await fetch("/api/auth/get-cookie");
       if (response.ok) {
         const data = await response.json();
-        setToken(data.token);
-      } else {
-        router.push("/auth/login");
+        console.log(data);
+        !data.success ? router.push("/") : setToken(data.token);
       }
     }
 
