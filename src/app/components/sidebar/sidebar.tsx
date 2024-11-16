@@ -1,4 +1,4 @@
-import { deleteAccessTokenCookie } from "@/app/api/cookieService";
+import { deleteAccessTokenCookie } from "@/app/api/services/cookieService";
 import { useLoading } from "@/contexts/LoadingContext";
 import { Home, Logout } from "@mui/icons-material";
 
