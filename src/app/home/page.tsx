@@ -143,15 +143,6 @@ export default function Home() {
     });
   };
 
-  const getTotals = () => {
-    transactions.forEach((transaction) => {
-      if(transaction.transaction_type === 'deposit') {
-        setTotalReceipts(Number(totalReceipts += transaction.amount))
-      }
-      
-    })
-  }
-
   return (
     <div className="flex h-full overflow-y-auto">
       {token ? (
