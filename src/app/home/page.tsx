@@ -10,18 +10,20 @@ import Card from "../components/card/card";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import PaidIcon from "@mui/icons-material/Paid";
-import PaymentsIcon from "@mui/icons-material/Payments";
-import { TransactionType } from '@/types/transaction';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import MoneyOffIcon from '@mui/icons-material/MoneyOff';
-import SearchIcon from '@mui/icons-material/Search';
+import { TransactionType } from "@/types/transaction";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import MoneyOffIcon from "@mui/icons-material/MoneyOff";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearAllIcon from "@mui/icons-material/ClearAll";
 
 export default function Home() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<TransactionType[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    TransactionType[]
+  >([]);
   const [page, setPage] = useState(1);
   const [totalRevenue, setTotalRevenue] = useState("0.00");
   const [totalExpenses, setTotalExpenses] = useState("0.00");
@@ -33,7 +35,7 @@ export default function Home() {
     industry: "",
     state: "",
   });
-  const { setLoading } = useLoading(); // Deixando setLoading fora do useEffect
+  const { setLoading } = useLoading();
   const ufs = [
     { key: "AC", value: "Acre" },
     { key: "AL", value: "Alagoas" },
@@ -64,7 +66,6 @@ export default function Home() {
     { key: "TO", value: "Tocantins" },
   ];
 
-  // Hook para pegar o token uma única vez
   useEffect(() => {
     const fetchToken = async () => {
       const data = await getAccessTokenFromCookie();
@@ -88,8 +89,8 @@ export default function Home() {
           throw new Error("Erro ao buscar transações da API");
         }
         const allTransactions = await response.json();
-        setTransactions(allTransactions); // Atualiza as transações uma vez
-        setFilteredTransactions(allTransactions.slice(0, 10)); // Filtra e mostra as 10 primeiras transações
+        setTransactions(allTransactions);
+        setFilteredTransactions(allTransactions.slice(0, 10));
         calculateMetrics(allTransactions);
       } catch (err) {
         console.error("Error fetching transactions:", err);
@@ -98,12 +99,14 @@ export default function Home() {
       }
     };
 
-    fetchTransactions(); // Chama a função para buscar transações, mas só se o token estiver presente
-  }, [token]); // A dependência é o token, não incluindo setLoading aqui
+    fetchTransactions();
+  }, [token]);
 
   const toggleSidebar = () => setIsSidebarCollapsed((prev) => !prev);
 
-  const handleFilterChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleFilterChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = event.target;
     setFilter((prevFilter) => ({
       ...prevFilter,
@@ -112,9 +115,8 @@ export default function Home() {
   };
 
   const applyFilter = async () => {
-    setLoading(true); // Inicia o carregamento
+    setLoading(true);
 
-    // Simula um pequeno atraso para demonstrar o carregamento
     setTimeout(() => {
       const filtered = transactions.filter((transaction) => {
         const isAmountMatch = transaction.amount
@@ -128,17 +130,22 @@ export default function Home() {
           .toUpperCase()
           .startsWith(filter.state.toUpperCase());
 
-        return (
-          isAmountMatch &&
-          isDateMatch &&
-          isIndustryMatch &&
-          isStateMatch
-        );
+        return isAmountMatch && isDateMatch && isIndustryMatch && isStateMatch;
       });
 
-      setFilteredTransactions(filtered);
-      setLoading(false); // Finaliza o carregamento
-    }, 1000); // Simula 1 segundo de processamento
+      setFilteredTransactions(filtered.slice(0, 10));
+      setLoading(false);
+    }, 1000);
+  };
+
+  const limpaFiltros = () => {
+    setFilteredTransactions(transactions.slice(0, 10));
+    setFilter({
+      amount: "",
+      date: "",
+      industry: "",
+      state: "",
+    });
   };
 
   const loadMoreTransactions = () => {
@@ -154,38 +161,35 @@ export default function Home() {
   };
 
   const formatAmount = (amount: number): string => {
-    const amountInReais = amount / 100;  // Converte centavos para reais
-  
-    // Formata o valor com ponto a cada três dígitos
+    const amountInReais = amount / 100;
+
     return amountInReais.toLocaleString("pt-BR", {
       style: "decimal",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
   };
-  
-  // Função para calcular as métricas
+
   const calculateMetrics = (transactionBatch: TransactionType[]) => {
     let revenue = 0;
     let expenses = 0;
     let pending = 0;
     const now = new Date();
-  
+
     transactionBatch.forEach((transaction) => {
-      const amount = parseInt(transaction.amount);  // Converte o valor para número (em centavos)
-  
+      const amount = parseInt(transaction.amount);
+
       if (transaction.transaction_type === "deposit") {
         revenue += amount;
       } else if (transaction.transaction_type === "withdraw") {
         expenses += amount;
       }
-  
+
       if (new Date(transaction.date) > now) {
         pending += amount;
       }
     });
-  
-    // Exibe os valores formatados
+
     setTotalRevenue(formatAmount(revenue));
     setTotalExpenses(formatAmount(expenses));
     setPendingTransactions(formatAmount(pending));
@@ -197,24 +201,44 @@ export default function Home() {
       {token ? (
         <>
           <div
-            className={`transition-all duration-300 bg-ft-tertiary ${isSidebarCollapsed ? "w-20" : "w-48"}`}
+            className={`transition-all duration-300 bg-ft-tertiary ${
+              isSidebarCollapsed ? "w-20" : "w-48"
+            }`}
           >
             <Sidebar isCollapsed={isSidebarCollapsed} />
           </div>
           <button
             type="button"
             onClick={toggleSidebar}
-            className={`fixed top-2 transition-all duration-300 p-4 bg-ft-primary rounded-full ${isSidebarCollapsed ? "left-[3.5rem]" : "left-[10.5rem]"}`}
+            className={`fixed top-2 transition-all duration-300 p-4 bg-ft-primary rounded-full ${
+              isSidebarCollapsed ? "left-[3.5rem]" : "left-[10.5rem]"
+            }`}
           >
             {isSidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
           </button>
           <div className="flex-1 bg-ft-primary">
             <div className="mx-auto h-full flex flex-col items-baseline p-16 overflow-y-auto">
               <div className="flex gap-8 flex-wrap p-3">
-                <Card title="Receitas" content={totalRevenue} icon={ReceiptIcon}></Card>
-                <Card title="Despesas" content={totalExpenses} icon={MoneyOffIcon}></Card>
-                <Card title="Transações pendentes" content={pendingTransactions} icon={PaidIcon}></Card>
-                <Card title="Saldo" content={balance} icon={AccountBalanceWalletIcon}></Card>
+                <Card
+                  title="Receitas"
+                  content={totalRevenue}
+                  icon={ReceiptIcon}
+                ></Card>
+                <Card
+                  title="Despesas"
+                  content={totalExpenses}
+                  icon={MoneyOffIcon}
+                ></Card>
+                <Card
+                  title="Transações pendentes"
+                  content={pendingTransactions}
+                  icon={PaidIcon}
+                ></Card>
+                <Card
+                  title="Saldo"
+                  content={balance}
+                  icon={AccountBalanceWalletIcon}
+                ></Card>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-2">
                 <div className="grid">
@@ -263,13 +287,22 @@ export default function Home() {
                     ))}
                   </select>
                 </div>
-                <button
-                type="button"
-                onClick={applyFilter}
-                className="bg-ft-secondary text-white rounded-md px-4 mt-6 w-1/2"
-              >
-                <SearchIcon/>
-              </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={applyFilter}
+                    className="bg-ft-secondary text-white rounded-md px-4 mt-6 w-1/2"
+                  >
+                    <SearchIcon />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={limpaFiltros}
+                    className="bg-ft-secondary text-white rounded-md px-4 mt-6 w-1/2"
+                  >
+                    <ClearAllIcon />
+                  </button>
+                </div>
               </div>
               {filteredTransactions.length ? (
                 <>
@@ -287,9 +320,25 @@ export default function Home() {
                       {filteredTransactions.map((transaction, idx) => (
                         <tr key={idx} className="border-b">
                           <td className="px-4 py-2">{transaction.account}</td>
-                          <td className="px-4 py-2">{transaction.date.split('T')[0] + ' | ' + transaction.date.split('T')[1].slice(0, -1)}</td>
-                          <td className={`px-4 py-2 ${transaction.transaction_type === 'deposit' ? 'text-green-500' : 'text-red-600'}`}><AttachMoneyIcon/>{`
-                            ${formatAmount(parseInt(transaction.amount)) + ' ' + transaction.currency}`}
+                          <td className="px-4 py-2">
+                            {transaction.date.split("T")[0] +
+                              " | " +
+                              transaction.date.split("T")[1].slice(0, -1)}
+                          </td>
+                          <td
+                            className={`px-4 py-2 ${
+                              transaction.transaction_type === "deposit"
+                                ? "text-green-500"
+                                : "text-red-600"
+                            }`}
+                          >
+                            <AttachMoneyIcon />
+                            {`
+                            ${
+                              formatAmount(parseInt(transaction.amount)) +
+                              " " +
+                              transaction.currency
+                            }`}
                           </td>
                           <td className="px-4 py-2">{transaction.industry}</td>
                           <td className="px-4 py-2">{transaction.state}</td>
