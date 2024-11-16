@@ -203,7 +203,7 @@ export default function Home() {
             {isSidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
           </button>
           <div className="flex-1 bg-ft-primary">
-            <div className="mx-auto h-full flex flex-col items-center p-16 overflow-y-auto">
+            <div className="mx-auto h-full flex flex-col items-baseline p-16 overflow-y-auto">
               <div className="flex gap-8 flex-wrap p-3">
                 <Card title="Receitas" content={totalRevenue} icon={ReceiptIcon}></Card>
                 <Card title="Despesas" content={totalExpenses} icon={MoneyOffIcon}></Card>
