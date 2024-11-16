@@ -19,7 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 export default function Home() {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<TransactionType[]>([]);
   const [page, setPage] = useState(1);
@@ -111,28 +111,34 @@ export default function Home() {
     }));
   };
 
-  const applyFilter = () => {
-    const filtered = transactions.filter((transaction) => {
-      const isAmountMatch = transaction.amount
-        .toString()
-        .startsWith(filter.amount);
-      const isDateMatch = transaction.date
-        .startsWith(filter.date);
-      const isIndustryMatch = transaction.industry
-        .toLowerCase()
-        .startsWith(filter.industry.toLowerCase());
-      const isStateMatch = transaction.state
-        .toUpperCase()
-        .startsWith(filter.state.toUpperCase());
+  const applyFilter = async () => {
+    setLoading(true); // Inicia o carregamento
 
-      return (
-        isAmountMatch &&
-        isDateMatch &&
-        isIndustryMatch &&
-        isStateMatch
-      );
-    });
-    setFilteredTransactions(filtered);
+    // Simula um pequeno atraso para demonstrar o carregamento
+    setTimeout(() => {
+      const filtered = transactions.filter((transaction) => {
+        const isAmountMatch = transaction.amount
+          .toString()
+          .startsWith(filter.amount);
+        const isDateMatch = transaction.date.startsWith(filter.date);
+        const isIndustryMatch = transaction.industry
+          .toLowerCase()
+          .startsWith(filter.industry.toLowerCase());
+        const isStateMatch = transaction.state
+          .toUpperCase()
+          .startsWith(filter.state.toUpperCase());
+
+        return (
+          isAmountMatch &&
+          isDateMatch &&
+          isIndustryMatch &&
+          isStateMatch
+        );
+      });
+
+      setFilteredTransactions(filtered);
+      setLoading(false); // Finaliza o carregamento
+    }, 1000); // Simula 1 segundo de processamento
   };
 
   const loadMoreTransactions = () => {
@@ -198,7 +204,7 @@ export default function Home() {
           <button
             type="button"
             onClick={toggleSidebar}
-            className={`fixed top-2 transition-all duration-300 ${isSidebarCollapsed ? "left-[3.5rem]" : "left-[10.5rem]"}`}
+            className={`fixed top-2 transition-all duration-300 p-4 bg-ft-primary rounded-full ${isSidebarCollapsed ? "left-[3.5rem]" : "left-[10.5rem]"}`}
           >
             {isSidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
           </button>
@@ -260,7 +266,7 @@ export default function Home() {
                 <button
                 type="button"
                 onClick={applyFilter}
-                className="bg-ft-secondary text-white rounded-md px-4 mt-4"
+                className="bg-ft-secondary text-white rounded-md px-4 mt-6 w-1/2"
               >
                 <SearchIcon/>
               </button>
