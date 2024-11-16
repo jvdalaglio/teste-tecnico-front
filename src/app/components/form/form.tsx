@@ -14,7 +14,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import {
   getAccessTokenFromCookie,
   setAccessTokenInCookie
-} from "@/app/api/cookieService";
+} from "@/app/api/services/cookieService";
 
 type Props = {
   typeSubmit: string;
