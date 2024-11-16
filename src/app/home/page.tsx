@@ -13,6 +13,8 @@ import PaidIcon from "@mui/icons-material/Paid";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import { TransactionType } from '@/types/transaction';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import MoneyOffIcon from '@mui/icons-material/MoneyOff';
+import SearchIcon from '@mui/icons-material/Search';
 
 export default function Home() {
   const router = useRouter();
@@ -21,11 +23,10 @@ export default function Home() {
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
   const [filteredTransactions, setFilteredTransactions] = useState<TransactionType[]>([]);
   const [page, setPage] = useState(1);
-
-  let [totalReceipts, setTotalReceipts] = useState(0);
-  const [totalCosts, setTotalCosts] = useState(0);
-  const [pendingTransactions, setPendingTransactions] = useState(0);
-  const [ballance, setBallance] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState("0.00");
+  const [totalExpenses, setTotalExpenses] = useState("0.00");
+  const [pendingTransactions, setPendingTransactions] = useState("0.00");
+  const [balance, setBalance] = useState("0.00");
   const [filter, setFilter] = useState({
     amount: "",
     date: "",
@@ -76,6 +77,7 @@ export default function Home() {
 
     fetchToken();
   }, []);
+
   useEffect(() => {
     if (!token) return;
     const fetchTransactions = async () => {
@@ -88,6 +90,7 @@ export default function Home() {
         const allTransactions = await response.json();
         setTransactions(allTransactions); // Atualiza as transações uma vez
         setFilteredTransactions(allTransactions.slice(0, 10)); // Filtra e mostra as 10 primeiras transações
+        calculateMetrics(allTransactions);
       } catch (err) {
         console.error("Error fetching transactions:", err);
       } finally {
@@ -107,6 +110,7 @@ export default function Home() {
       [name]: value,
     }));
   };
+
   const applyFilter = () => {
     const filtered = transactions.filter((transaction) => {
       const isAmountMatch = transaction.amount
@@ -143,6 +147,45 @@ export default function Home() {
     });
   };
 
+  const formatAmount = (amount: number): string => {
+    const amountInReais = amount / 100;  // Converte centavos para reais
+  
+    // Formata o valor com ponto a cada três dígitos
+    return amountInReais.toLocaleString("pt-BR", {
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+  
+  // Função para calcular as métricas
+  const calculateMetrics = (transactionBatch: TransactionType[]) => {
+    let revenue = 0;
+    let expenses = 0;
+    let pending = 0;
+    const now = new Date();
+  
+    transactionBatch.forEach((transaction) => {
+      const amount = parseInt(transaction.amount);  // Converte o valor para número (em centavos)
+  
+      if (transaction.transaction_type === "deposit") {
+        revenue += amount;
+      } else if (transaction.transaction_type === "withdraw") {
+        expenses += amount;
+      }
+  
+      if (new Date(transaction.date) > now) {
+        pending += amount;
+      }
+    });
+  
+    // Exibe os valores formatados
+    setTotalRevenue(formatAmount(revenue));
+    setTotalExpenses(formatAmount(expenses));
+    setPendingTransactions(formatAmount(pending));
+    setBalance(formatAmount(revenue - expenses));
+  };
+
   return (
     <div className="flex h-full overflow-y-auto">
       {token ? (
@@ -161,13 +204,13 @@ export default function Home() {
           </button>
           <div className="flex-1 bg-ft-primary">
             <div className="mx-auto h-full flex flex-col items-center p-16 overflow-y-auto">
-              <div className="flex gap-8 flex-wrap">
-                <Card title="Receitas" content="R$ 0,00" icon={ReceiptIcon}></Card>
-                <Card title="Despesas" content="R$ 0,00" icon={PaymentsIcon}></Card>
-                <Card title="Transações pendentes" content="R$ 0,00" icon={PaidIcon}></Card>
-                <Card title="Saldo" content="R$ 0,00" icon={AccountBalanceWalletIcon}></Card>
+              <div className="flex gap-8 flex-wrap p-3">
+                <Card title="Receitas" content={totalRevenue} icon={ReceiptIcon}></Card>
+                <Card title="Despesas" content={totalExpenses} icon={MoneyOffIcon}></Card>
+                <Card title="Transações pendentes" content={pendingTransactions} icon={PaidIcon}></Card>
+                <Card title="Saldo" content={balance} icon={AccountBalanceWalletIcon}></Card>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-2">
                 <div className="grid">
                   <label htmlFor="date">Data</label>
                   <input
@@ -175,7 +218,7 @@ export default function Home() {
                     name="date"
                     value={filter.date}
                     onChange={handleFilterChange}
-                    className="bg-ft-primary p-2 border rounded-md mb-4 placeholder:text-ft-platinum outline-none"
+                    className="bg-ft-primary p-2 border rounded-md placeholder:text-ft-platinum outline-none"
                   />
                 </div>
                 <div className="grid">
@@ -185,7 +228,7 @@ export default function Home() {
                     name="amount"
                     value={filter.amount}
                     onChange={handleFilterChange}
-                    className="bg-ft-primary p-2 border rounded-md mb-4 placeholder:text-ft-platinum outline-none"
+                    className="bg-ft-primary p-2 border rounded-md placeholder:text-ft-platinum outline-none"
                   />
                 </div>
                 <div className="grid">
@@ -195,7 +238,7 @@ export default function Home() {
                     name="industry"
                     value={filter.industry}
                     onChange={handleFilterChange}
-                    className="bg-ft-primary p-2 border rounded-md mb-4 placeholder:text-ft-platinum outline-none"
+                    className="bg-ft-primary p-2 border rounded-md placeholder:text-ft-platinum outline-none"
                   />
                 </div>
                 <div className="grid">
@@ -204,7 +247,7 @@ export default function Home() {
                     name="state"
                     value={filter.state}
                     onChange={handleFilterChange}
-                    className="bg-ft-primary p-2 border rounded-md mb-4 placeholder:text-ft-platinum outline-none"
+                    className="bg-ft-primary p-2 border rounded-md placeholder:text-ft-platinum outline-none"
                   >
                     <option value="">Selecione</option>
                     {ufs.map((uf) => (
@@ -214,14 +257,14 @@ export default function Home() {
                     ))}
                   </select>
                 </div>
-              </div>
-              <button
+                <button
                 type="button"
                 onClick={applyFilter}
-                className="bg-ft-primary text-white rounded-md px-4 py-2 mt-4"
+                className="bg-ft-secondary text-white rounded-md px-4 mt-4"
               >
-                Filtrar
+                <SearchIcon/>
               </button>
+              </div>
               {filteredTransactions.length ? (
                 <>
                   <table className="min-w-full bg-ft-primary mt-8">
@@ -240,7 +283,7 @@ export default function Home() {
                           <td className="px-4 py-2">{transaction.account}</td>
                           <td className="px-4 py-2">{transaction.date.split('T')[0] + ' | ' + transaction.date.split('T')[1].slice(0, -1)}</td>
                           <td className={`px-4 py-2 ${transaction.transaction_type === 'deposit' ? 'text-green-500' : 'text-red-600'}`}><AttachMoneyIcon/>{`
-                            ${transaction.amount + '-' + transaction.currency}`}
+                            ${formatAmount(parseInt(transaction.amount)) + ' ' + transaction.currency}`}
                           </td>
                           <td className="px-4 py-2">{transaction.industry}</td>
                           <td className="px-4 py-2">{transaction.state}</td>
