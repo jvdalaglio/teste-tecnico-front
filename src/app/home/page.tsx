@@ -2,11 +2,9 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "../components/sidebar/sidebar";
 import { getAccessTokenFromCookie } from "@/app/api/services/cookieService";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { useLoading } from "@/contexts/LoadingContext";
-import Card from "../components/card/card";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import PaidIcon from "@mui/icons-material/Paid";
@@ -15,7 +13,15 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
-import Charts from "../components/charts/charts";
+import dynamic from "next/dynamic";
+
+const Charts = dynamic(() => import("../components/charts/charts"), {
+  ssr: false,
+});
+const Card = dynamic(() => import("../components/card/card"), { ssr: false });
+const Sidebar = dynamic(() => import("../components/sidebar/sidebar"), {
+  ssr: false,
+})
 
 export default function Home() {
   const router = useRouter();
