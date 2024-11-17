@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/sidebar/sidebar";
 import { getAccessTokenFromCookie } from "@/app/api/services/cookieService";
@@ -205,6 +205,8 @@ export default function Home() {
   };
 
   return (
+    <Suspense fallback={<div>Loading...</div>}>
+
     <div className="flex h-full overflow-y-auto">
       {token ? (
         <>
@@ -375,5 +377,6 @@ export default function Home() {
         <p>Carregando...</p>
       )}
     </div>
+  </Suspense>
   );
 }
