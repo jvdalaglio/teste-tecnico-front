@@ -15,9 +15,11 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import MoneyOffIcon from "@mui/icons-material/MoneyOff";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
+import Charts from "../components/charts/charts";
 
 export default function Home() {
   const router = useRouter();
+  const [chartData, setChartData] =  useState<TransactionType[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   const [transactions, setTransactions] = useState<TransactionType[]>([]);
@@ -89,9 +91,13 @@ export default function Home() {
           throw new Error("Erro ao buscar transações da API");
         }
         const allTransactions = await response.json();
+        allTransactions.sort((a: TransactionType, b: TransactionType) => {
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        });
         setTransactions(allTransactions);
         setFilteredTransactions(allTransactions.slice(0, 10));
         calculateMetrics(allTransactions);
+        setChartData(allTransactions);
       } catch (err) {
         console.error("Error fetching transactions:", err);
       } finally {
@@ -132,14 +138,15 @@ export default function Home() {
 
         return isAmountMatch && isDateMatch && isIndustryMatch && isStateMatch;
       });
-
-      setFilteredTransactions(filtered.slice(0, 10));
+      setFilteredTransactions(filtered);
+      setChartData(filtered);
       setLoading(false);
     }, 1000);
   };
 
   const limpaFiltros = () => {
     setFilteredTransactions(transactions.slice(0, 10));
+    setChartData(transactions);
     setFilter({
       amount: "",
       date: "",
@@ -151,11 +158,12 @@ export default function Home() {
   const loadMoreTransactions = () => {
     setPage((prevPage) => {
       const nextPage = prevPage + 1;
-      const nextTransactions = transactions.slice(
+      const nextTransactions = filteredTransactions.length > 10 ? filteredTransactions.slice(0, nextPage * 10) : transactions.slice(
         nextPage * 10 - 10,
         nextPage * 10
       );
       setFilteredTransactions((prev) => [...prev, ...nextTransactions]);
+      setChartData((prev) => [...prev, ...nextTransactions]);
       return nextPage;
     });
   };
@@ -202,7 +210,7 @@ export default function Home() {
         <>
           <div
             className={`transition-all duration-300 bg-ft-tertiary ${
-              isSidebarCollapsed ? "w-20" : "w-48"
+              isSidebarCollapsed ? "w-20" : "w-32"
             }`}
           >
             <Sidebar isCollapsed={isSidebarCollapsed} />
@@ -210,15 +218,16 @@ export default function Home() {
           <button
             type="button"
             onClick={toggleSidebar}
-            className={`fixed top-2 transition-all duration-300 p-4 bg-ft-primary rounded-full ${
-              isSidebarCollapsed ? "left-[3.5rem]" : "left-[10.5rem]"
+            className={`hidden sm:block fixed top-2 transition-all duration-300 p-4 bg-ft-primary rounded-full ${
+              isSidebarCollapsed ? "left-[2.5rem]" : "left-[6.2rem]"
             }`}
           >
             {isSidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
           </button>
           <div className="flex-1 bg-ft-primary">
-            <div className="mx-auto h-full flex flex-col items-baseline p-16 overflow-y-auto">
-              <div className="flex gap-8 flex-wrap p-3">
+            <div className="mx-auto h-full flex flex-col items-baseline px-16 py-4 overflow-y-auto">
+              <h1 className="text-4xl font-bold text-ft-gray px-3 mb-4">Finan Track</h1>
+              <div className="w-auto grid md:grid-cols-2 lg:grid-cols-4 flex-wrap p-3 mb-12 md:w-full gap-8 border border-ft-platinum rounded-lg">
                 <Card
                   title="Receitas"
                   content={totalRevenue}
@@ -240,6 +249,8 @@ export default function Home() {
                   icon={AccountBalanceWalletIcon}
                 ></Card>
               </div>
+              <Charts data={chartData}></Charts>
+              <div className="w-full p-5 border border-ft-gray rounded-lg">
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 p-2 w-full">
                 <div className="grid">
                   <label htmlFor="date">Data</label>
@@ -299,7 +310,7 @@ export default function Home() {
                     type="button"
                     onClick={limpaFiltros}
                     className="bg-ft-secondary text-white rounded-md px-4 mt-6 w-1/2"
-                  >
+                    >
                     <ClearAllIcon />
                   </button>
                 </div>
@@ -328,10 +339,10 @@ export default function Home() {
                           <td
                             className={`px-4 py-2 ${
                               transaction.transaction_type === "deposit"
-                                ? "text-green-500"
-                                : "text-red-600"
+                              ? "text-green-500"
+                              : "text-red-600"
                             }`}
-                          >
+                            >
                             <AttachMoneyIcon />
                             {`
                             ${
@@ -346,17 +357,17 @@ export default function Home() {
                       ))}
                     </tbody>
                   </table>
-                  <button
-                    type="button"
+                  <p
                     onClick={loadMoreTransactions}
-                    className="bg-ft-primary text-white rounded-md px-4 py-2 mt-4"
-                  >
-                    Carregar mais
-                  </button>
+                    className="text-ft-platinum text-center mt-4 cursor-pointer"
+                    >
+                    Carregar mais...
+                  </p>
                 </>
               ) : (
                 <p>Sem transações</p>
               )}
+              </div>
             </div>
           </div>
         </>
