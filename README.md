@@ -1,36 +1,23 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Dashboard de Dados Financeiros
 
-## Getting Started
+Esta aplicação é uma dashboard desenvolvida para exibir e analisar dados financeiros de forma dinâmica, com gráficos interativos e filtros personalizados.
 
-First, run the development server:
+Funcionalidades
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+	•	Autenticação de Usuário: Página de login integrada ao Firebase Authentication, com gerenciamento de token para persistência de sessão por 1 hora.
+	•	API Personalizada: Criação de uma API para gerenciar tokens de acesso, armazenados nos cookies do navegador para proteger as sessões.
+	•	Exibição de Dados: Os dados financeiros são lidos de um arquivo JSON armazenado em uma API personalizada.
+	•	Gráficos Dinâmicos: Utilização de gráficos interativos com a biblioteca ApexCharts para melhor visualização dos dados.
+	•	Estilização Responsiva: Integração do Tailwind CSS para estilização e Material UI para componentes adicionais.
+	•	Resumo em Cards: Exibição de valores totais somados do JSON em cards informativos.
+	•	Filtros Avançados: Filtros dinâmicos para refinar a visualização e análise dos dados.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tecnologias Utilizadas
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+	•	Front-end: React, Tailwind CSS, Material UI, ApexCharts
+	•	Back-end: Firebase, API customizada para gerenciamento de tokens e dados
+	•	Deploy: Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Como acessar
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+A aplicação está hospedada na Vercel. Para acessar os dados JSON diretamente, utilize a rota: /api/dados.
